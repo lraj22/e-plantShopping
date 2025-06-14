@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import './ProductList.css'
 import CartItem from './CartItem';
 import { addItem } from './CartSlice';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 function ProductList({ onHomeClick }) {
     const [showCart, setShowCart] = useState(false);
     const [showPlants, setShowPlants] = useState(false); // State to control the visibility of the About Us page
 	const [addedToCart, setAddedToCart] = useState([]);
+	const cart = useSelector(state => state.cart.items);
 	const dispatch = useDispatch();
 
     const plantsArray = [
@@ -258,11 +259,18 @@ function ProductList({ onHomeClick }) {
     };
 	
 	const handleAddToCart = (e) => {
-		let plantName = e.target.parentNode.querySelector(".product-title").textContent;
+		const getProp = prop => e.target.parentNode.querySelector("." + prop).textContent;
+		let plantName = getProp("product-title");
+		let plantCost = getProp("product-price");
+		let plantImage = e.target.parentNode.querySelector("img").src;
 		if (addedToCart.includes(plantName)) return;
 		setAddedToCart([...addedToCart, plantName]);
 		e.target.classList.add("added-to-cart");
-		dispatch(addItem(plantName));
+		dispatch(addItem({
+			"name": plantName,
+			"cost": plantCost,
+			"image": plantImage,
+		}));
 		console.log("Added", plantName);
 	};
 	
@@ -296,13 +304,14 @@ function ProductList({ onHomeClick }) {
 									<div className="product-list">
 										{
 											category.plants.map((plant) => {
+												let inCart = cart.find(item => item.name === plant.name);
 												return (
 													<div className="product-card" key={plant.name}>
 														<h3 className="product-title">{plant.name}</h3>
 														<img src={plant.image} alt={plant.name} height="150" />
 														<p className="product-price">{plant.cost}</p>
 														<p>{plant.description}</p>
-														<button className="product-button" onClick={handleAddToCart}>{addedToCart.includes(plant.name) ? "Added to Cart" : "Add to Cart"}</button>
+														<button className={"product-button" + (inCart ? " added-to-cart" : "")} onClick={handleAddToCart}>{inCart ? "Added to Cart" : "Add to Cart"}</button>
 													</div>
 												)
 											})
